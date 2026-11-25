@@ -12,7 +12,8 @@
  * Game identity comes from the public catalog synced off the blablalink CDN.
  * The game job polls the public launcher GetVersion endpoint. Set
  * NIKKE_LAUNCHER_VERSION_URL to override it. A change to launcher_version_info
- * alone does not scrape. build_id or the Game cdn_root does.
+ * alone does not scrape. build_id, the Game cdn_root, or a catalog fingerprint
+ * change does, including after that version is stored.
  *
  * enikk is solo raid only, and only inside the 8 day window that starts the
  * first time a season id is seen.
@@ -73,8 +74,10 @@ async function updateGame(db, state, sections) {
             launcher.launcherVersion !== prev.launcherVersion &&
             launcher.buildId === prev.buildId &&
             launcher.cdnRoot === prev.cdnRoot;
-        scrape = !launcherOnly && (launcher.buildId !== prev.buildId || launcher.cdnRoot !== prev.cdnRoot);
-        if (launcherOnly) lines.push(`Launcher-only bump ${launcher.launcherVersion}; game tables not scraped.`);
+        scrape = scrape || (!launcherOnly && (launcher.buildId !== prev.buildId || launcher.cdnRoot !== prev.cdnRoot));
+        if (launcherOnly && !scrape) {
+            lines.push(`Launcher-only bump ${launcher.launcherVersion}; game tables not scraped.`);
+        }
     }
     state.game = {
         catalogHash: catalog.catalogHash,
