@@ -8,10 +8,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: catalog-data
-  cancel-in-progress: false
-
 jobs:
   prydwen:
     if: github.repository == 'joevdotme/Nikke-Manager'
