@@ -35,6 +35,24 @@ git commit -m "chore(data): updated game resources"
 git push "https://x-access-token:${CATALOG_GITHUB_TOKEN}@github.com/joevdotme/Nikke-Manager.git" "HEAD:refs/heads/${branch}"
 
 export GH_TOKEN="$CATALOG_GITHUB_TOKEN"
-pr_url="$(gh pr create --repo joevdotme/Nikke-Manager --base main --head "$branch" --title "chore(data): updated game resources" --body-file "$changelog")"
+body="$(mktemp)"
+{
+    echo "## Changelog"
+    echo
+    cat "$changelog"
+    echo
+    echo "## How to test"
+    echo
+    echo "1. \`catalog-validate\` passes on this pull request. A failing check stays open and does not deploy."
+    echo "2. After squash merge, Pages publishes \`main\`. \`VERSION\` does not change."
+    echo
+    echo "## Screenshots"
+    echo
+    echo "No UI change."
+} > "$body"
+# Title stays exact so data updates group as chores in the release changelog.
+# chore(data) gets no type label.
+pr_url="$(gh pr create --repo joevdotme/Nikke-Manager --base main --head "$branch" --title "chore(data): updated game resources" --body-file "$body")"
+rm -f "$body"
 echo "$pr_url"
 gh pr merge --repo joevdotme/Nikke-Manager "$pr_url" --squash --auto
