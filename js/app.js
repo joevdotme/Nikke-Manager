@@ -268,24 +268,19 @@ preloadNikkeIcons();
     if (!el) return;
     const b = window.BUILD_INFO || {};
     const version = b.version ? "v" + b.version : "v?";
-    const parts = [version];
-    if (b.commit) parts.push("build " + b.commit);
-    if (b.date) parts.push(b.date);
-    const nikke = [];
-    if (b.nikkeClient) nikke.push("client " + b.nikkeClient);
-    if (b.nikkeServer) nikke.push("server " + b.nikkeServer);
-    if (b.nikkeLauncher) nikke.push("launcher " + b.nikkeLauncher);
-    else if (b.nikkeClient || b.nikkeServer) nikke.push("launcher —");
-    const appLine = parts.join(" · ");
-    const nikkeLine = nikke.length ? "Nikke " + nikke.join(" · ") : "";
-    el.textContent = nikkeLine ? appLine + "\n" + nikkeLine : appLine;
+    const manager = ["Manager " + version];
+    if (b.commit) manager.push("build (" + b.commit + ")");
+    if (b.date) manager.push(b.date);
+    const lines = [manager.join(" · ")];
+    if (b.nikkeClient) lines.push("Game " + b.nikkeClient);
+    if (b.nikkeServer) lines.push("Server " + b.nikkeServer);
+    el.textContent = lines.join("\n");
     el.title = [
-        "Version " + (b.version || "?"),
-        b.commit ? "Commit: " + b.commit : "",
-        b.date ? "Build date: " + b.date : "",
-        b.nikkeClientFull || b.nikkeClient ? "Nikke client: " + (b.nikkeClientFull || b.nikkeClient) : "",
-        b.nikkeServer ? "Nikke server build: " + b.nikkeServer : "",
-        b.nikkeClient || b.nikkeServer ? "Nikke launcher: " + (b.nikkeLauncher || "not published") : "",
+        "Manager " + (b.version || "?"),
+        b.commit ? "Build: " + b.commit : "",
+        b.date ? "Date: " + b.date : "",
+        b.nikkeClientFull || b.nikkeClient ? "Game: " + (b.nikkeClientFull || b.nikkeClient) : "",
+        b.nikkeServer ? "Server: " + b.nikkeServer : "",
         b.nikkeCdn ? "Game CDN: " + b.nikkeCdn : "",
     ]
         .filter(Boolean)

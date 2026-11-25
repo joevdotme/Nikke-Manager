@@ -71,9 +71,9 @@ You do not need `NIKKE_LAUNCHER_VERSION_URL`. The game job already posts to `htt
 
 ## Version changelog
 
-`docs/nikke-changelog.md` gains an entry only when the published client version (`version_info.version_name`) or server build (`version_info.build_id`) changes. The data pull request commits that file. A Pages deploy does not add a changelog commit.
+`docs/nikke-changelog.md` gains an entry only when the published game version (`version_info.version_name`) or server build (`version_info.build_id`) changes. The data pull request commits that file. A Pages deploy does not add a changelog commit.
 
-The site footer is stamped into the deploy artifact, not into git. It shows the Nikke client, server build, and launcher the publish was built for. The public version document has no separate server version string, so the server line is `build_id`. `launcher_version_info` is often empty; the footer shows an em dash until the document includes a launcher version. A failed version lookup leaves the Nikke line off and still publishes.
+The site footer is stamped into the deploy artifact, not into git. It is three lines: manager version, build sha, and date; the game version (`version_info.version_name`); and the server build (`version_info.build_id`). The public version document has no separate server version string, so the server line is `build_id`. A failed version lookup leaves the game and server lines off and still publishes. `launcher_version_info` is the PC launcher's own build. The footer does not show it. The game job still reads it so a launcher-only bump does not scrape.
 
 ## First run
 

@@ -150,11 +150,10 @@ function gameVersionChanged(prev, info) {
 function formatNikkeChangelogEntry(info, date) {
     const stamp = nikkeVersionStamp(info);
     return [
-        `## ${date} — client ${stamp.client || "unknown"}, server ${stamp.server || "unknown"}`,
+        `## ${date} — game ${stamp.client || "unknown"}, server ${stamp.server || "unknown"}`,
         "",
-        `- Client: ${stamp.clientFull || "unknown"}`,
-        `- Server build: ${stamp.server || "unknown"}`,
-        `- Launcher: ${stamp.launcher || "not published"}`,
+        `- Game: ${stamp.clientFull || "unknown"}`,
+        `- Server: ${stamp.server || "unknown"}`,
         `- Game CDN: ${stamp.cdn || "unknown"}`,
         "",
     ].join("\n");

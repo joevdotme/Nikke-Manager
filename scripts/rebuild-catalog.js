@@ -41,7 +41,7 @@ const statePath = path.join(root, "knowledge", "source-versions.json");
 const nikkeChangelogPath = path.join(root, "docs", "nikke-changelog.md");
 const NIKKE_CHANGELOG_HEADER = `# Nikke version changelog
 
-An entry is added when the published client version or server build changes.
+An entry is added when the published game version or server build changes.
 A Pages deploy that does not change those versions is not listed.
 
 `;

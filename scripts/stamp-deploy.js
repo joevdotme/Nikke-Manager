@@ -4,9 +4,9 @@
  * commit being published. Does not edit VERSION and does not write back
  * to the git checkout.
  *
- * Also records the Nikke client, server build, and launcher version the
- * deploy was published for. A failed version lookup leaves those fields
- * blank and still publishes.
+ * Also records the Nikke game version and server build this deploy was
+ * published for. A failed version lookup leaves those fields blank and
+ * still publishes.
  *
  *   node scripts/stamp-deploy.js dist
  */
@@ -60,8 +60,7 @@ async function main() {
 //  AUTO-GENERATED FILE -- DO NOT EDIT BY HAND
 //  Stamped by scripts/stamp-deploy.js for this Pages deploy.
 //  VERSION is copied through unchanged.
-//  Nikke versions are the client, server build, and launcher this
-//  deploy was published for. Server build is version_info.build_id.
+//  Game is version_info.version_name. Server is version_info.build_id.
 // ============================================================
 window.BUILD_INFO = {
   version: ${js(version)},
@@ -70,7 +69,6 @@ window.BUILD_INFO = {
   nikkeClient: ${js(nikke.client)},
   nikkeClientFull: ${js(nikke.clientFull)},
   nikkeServer: ${js(nikke.server)},
-  nikkeLauncher: ${js(nikke.launcher)},
   nikkeCdn: ${js(nikke.cdn)}
 };
 `;
@@ -84,7 +82,7 @@ window.BUILD_INFO = {
     );
     fs.writeFileSync(indexPath, stamped);
     const nikkeLabel = nikke.client
-        ? ` client ${nikke.client} server ${nikke.server || "—"} launcher ${nikke.launcher || "—"}`
+        ? ` game ${nikke.client} server ${nikke.server || "—"}`
         : " Nikke versions unavailable";
     console.log(`Stamped ${dest} v${version} build ${commit} (${date})${nikkeLabel}`);
 }
