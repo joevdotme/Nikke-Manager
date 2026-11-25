@@ -20,12 +20,21 @@ on:
 permissions:
   contents: read
 
+# Game, Prydwen, and enikk all rewrite the same knowledge files.
+concurrency:
+  group: catalog-data
+  cancel-in-progress: false
+  queue: max
+
 jobs:
   update:
     if: github.repository == 'joevdotme/Nikke-Manager'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The read-only GITHUB_TOKEN would override CATALOG_GITHUB_TOKEN on push.
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: "22"

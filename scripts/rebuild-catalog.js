@@ -127,6 +127,7 @@ async function updatePrydwen(db, state, sections) {
     }
     let src = db.src;
     const nikkes = db.nikkes;
+    let skipped = 0;
     for (let i = 0; i < nikkes.length; i++) {
         const entry = nikkes[i];
         const slug = makeSlug(entry.name, entry);
@@ -134,6 +135,7 @@ async function updatePrydwen(db, state, sections) {
         const page = await fetchCharacterPage(slug);
         if (page.status !== 200) {
             console.log(`HTTP ${page.status}`);
+            skipped += 1;
             await sleep(400);
             continue;
         }
@@ -153,8 +155,12 @@ async function updatePrydwen(db, state, sections) {
         }
         await sleep(400);
     }
-    if (!lines.length) lines.push("No weapon changes.");
-    state.prydwen = { indexHash };
+    if (skipped) {
+        lines.push(`${skipped} character page(s) returned non-200. Index hash not saved.`);
+    } else if (!lines.length) {
+        lines.push("No weapon changes.");
+    }
+    if (!skipped) state.prydwen = { indexHash };
     sections.push({ source: "prydwen", lines });
     return src;
 }
@@ -162,6 +168,11 @@ async function updatePrydwen(db, state, sections) {
 async function updateEnikk(db, state, sections) {
     const lines = [];
     const raids = await fetchSoloRaids();
+    if (!raids.length) {
+        lines.push("No usable solo raid rows. Solo raid not scraped.");
+        sections.push({ source: "enikk", lines });
+        return db.src;
+    }
     const latest = raids[raids.length - 1];
     const window = seasonWindow(state, latest.season, new Date());
     state.enikk = window.enikk;

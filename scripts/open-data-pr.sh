@@ -32,6 +32,9 @@ git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 git checkout -B "$branch"
 git add -- knowledge/nikke-database.js knowledge/source-versions.json
 git commit -m "chore(data): updated game resources"
+# actions/checkout stores GITHUB_TOKEN as an Authorization extraheader. Git sends
+# that header instead of the token in the push URL, and contents:read cannot create refs.
+git config --local --unset-all http.https://github.com/.extraheader || true
 git push "https://x-access-token:${CATALOG_GITHUB_TOKEN}@github.com/joevdotme/Nikke-Manager.git" "HEAD:refs/heads/${branch}"
 
 export GH_TOKEN="$CATALOG_GITHUB_TOKEN"
