@@ -85,6 +85,20 @@ You can also add custom Nikkes (characters not yet in the database) by entering 
 
 ---
 
+### Local dev
+
+The installed Nikke Manager extension already talks to localhost. From the repo root:
+
+```bash
+make serve
+```
+
+That serves this checkout at http://localhost:3000/, which is the first host the extension tries. `make dev` is the same target. `make` or `make help` lists every target.
+
+Close any open tab on https://pilgrimworks.github.io/Nikke-Manager before Import Data. The extension updates an already-open manager tab and will not reach localhost while that tab exists.
+
+---
+
 ### Saving your data
 
 Your data is stored in your browser's local storage automatically. To back it up or move it to another device:
