@@ -25,12 +25,27 @@ const path = require("path");
 const { loadDatabaseSource, replaceWeapon, replaceBosses, appendNikkes } = require("./lib/db-file");
 const { makeSlug, extractWeapon, fetchCharacterPage } = require("./lib/prydwen-weapon");
 const { fetchText } = require("./lib/http");
-const { fetchGameCatalog, fetchLauncherVersion, LAUNCHER_VERSION_URL } = require("./lib/game-catalog");
+const {
+    fetchGameCatalog,
+    fetchLauncherVersion,
+    LAUNCHER_VERSION_URL,
+    nikkeVersionStamp,
+    gameVersionChanged,
+    formatNikkeChangelogEntry,
+} = require("./lib/game-catalog");
 const { fetchSoloRaids, seasonWindow } = require("./lib/enikk");
 
 const root = path.join(__dirname, "..");
 const dbPath = path.join(root, "knowledge", "nikke-database.js");
 const statePath = path.join(root, "knowledge", "source-versions.json");
+const nikkeChangelogPath = path.join(root, "docs", "nikke-changelog.md");
+const NIKKE_CHANGELOG_HEADER = `# Nikke version changelog
+
+An entry is added when the published client version or server build changes.
+A Pages deploy that does not change those versions is not listed.
+
+`;
+let pendingVersionEntry = null;
 
 function argValue(flag) {
     const i = process.argv.indexOf(flag);
@@ -81,6 +96,12 @@ async function updateGame(db, state, sections) {
     );
     const scrape = hashChanged || buildChanged;
     if (launcherOnly) lines.push(`Launcher-only bump ${launcher.launcherVersion}; game tables not scraped.`);
+    if (gameVersionChanged(prev, launcher)) {
+        const date = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+        pendingVersionEntry = formatNikkeChangelogEntry(launcher, date);
+        const stamp = nikkeVersionStamp(launcher);
+        lines.push(`Game version client ${stamp.client || "unknown"}, server ${stamp.server || "unknown"}.`);
+    }
     state.game = {
         catalogHash: catalog.catalogHash,
         syncedAt: catalog.syncedAt,
@@ -228,6 +249,13 @@ async function main() {
     if (write) {
         fs.writeFileSync(dbPath, src);
         writeState(state);
+        if (pendingVersionEntry) {
+            const prev = fs.existsSync(nikkeChangelogPath)
+                ? fs.readFileSync(nikkeChangelogPath, "utf8")
+                : NIKKE_CHANGELOG_HEADER;
+            const bodyText = prev.endsWith("\n") ? prev : prev + "\n";
+            fs.writeFileSync(nikkeChangelogPath, bodyText + pendingVersionEntry);
+        }
     }
 }
 

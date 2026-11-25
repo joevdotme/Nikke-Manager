@@ -16,10 +16,14 @@ if [ -z "$source_name" ] || [ -z "$changelog" ] || [ ! -f "$changelog" ]; then
     exit 1
 fi
 
-git diff --quiet -- knowledge/nikke-database.js knowledge/source-versions.json && {
+paths=(knowledge/nikke-database.js knowledge/source-versions.json)
+if [ -f docs/nikke-changelog.md ]; then
+    paths+=(docs/nikke-changelog.md)
+fi
+if [ -z "$(git status --porcelain -- "${paths[@]}")" ]; then
     echo "No knowledge files changed. Not opening a pull request."
     exit 0
-}
+fi
 
 if [ -z "${CATALOG_GITHUB_TOKEN:-}" ]; then
     echo "CATALOG_GITHUB_TOKEN is not set. Not opening a pull request."
@@ -32,7 +36,7 @@ git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 git checkout -B "$branch"
 # actions/checkout stores GITHUB_TOKEN in http.extraheader, and Git prefers that over the PAT in the push URL.
 git config --unset-all http.https://github.com/.extraheader || true
-git add -- knowledge/nikke-database.js knowledge/source-versions.json
+git add -- "${paths[@]}"
 git commit -m "chore(data): updated game resources"
 git push "https://x-access-token:${CATALOG_GITHUB_TOKEN}@github.com/joevdotme/Nikke-Manager.git" "HEAD:refs/heads/${branch}"
 

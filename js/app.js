@@ -271,12 +271,25 @@ preloadNikkeIcons();
     const parts = [version];
     if (b.commit) parts.push("build " + b.commit);
     if (b.date) parts.push(b.date);
-    el.textContent = parts.join(" · ");
-    el.title =
-        "Version " +
-        (b.version || "?") +
-        (b.commit ? "\nCommit: " + b.commit : "") +
-        (b.date ? "\nBuild date: " + b.date : "");
+    const nikke = [];
+    if (b.nikkeClient) nikke.push("client " + b.nikkeClient);
+    if (b.nikkeServer) nikke.push("server " + b.nikkeServer);
+    if (b.nikkeLauncher) nikke.push("launcher " + b.nikkeLauncher);
+    else if (b.nikkeClient || b.nikkeServer) nikke.push("launcher —");
+    const appLine = parts.join(" · ");
+    const nikkeLine = nikke.length ? "Nikke " + nikke.join(" · ") : "";
+    el.textContent = nikkeLine ? appLine + "\n" + nikkeLine : appLine;
+    el.title = [
+        "Version " + (b.version || "?"),
+        b.commit ? "Commit: " + b.commit : "",
+        b.date ? "Build date: " + b.date : "",
+        b.nikkeClientFull || b.nikkeClient ? "Nikke client: " + (b.nikkeClientFull || b.nikkeClient) : "",
+        b.nikkeServer ? "Nikke server build: " + b.nikkeServer : "",
+        b.nikkeClient || b.nikkeServer ? "Nikke launcher: " + (b.nikkeLauncher || "not published") : "",
+        b.nikkeCdn ? "Game CDN: " + b.nikkeCdn : "",
+    ]
+        .filter(Boolean)
+        .join("\n");
 })();
 
 // ── Tutorial & New User Redirect ────────────────────────────

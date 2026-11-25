@@ -122,4 +122,50 @@ async function fetchLauncherVersion(url) {
     };
 }
 
-module.exports = { fetchGameCatalog, fetchLauncherVersion, burstFlags, LAUNCHER_VERSION_URL };
+// The version document has no separate server version string. build_id is the
+// build the service is publishing. launcher_version_info is often empty.
+function nikkeVersionStamp(info) {
+    if (!info) {
+        return { client: "", clientFull: "", server: "", launcher: "", cdn: "" };
+    }
+    const name = info.versionName || "";
+    const match = String(name).match(/(\d+\.\d+\.\d+)\s*$/);
+    return {
+        client: match ? match[1] : name,
+        clientFull: name,
+        server: info.buildId || "",
+        launcher: info.launcherVersion || "",
+        cdn: info.cdnRoot || "",
+    };
+}
+
+function gameVersionChanged(prev, info) {
+    if (!info) return false;
+    const previous = prev || {};
+    const clientChanged = (info.versionName || "") !== (previous.versionName || "");
+    const serverChanged = String(info.buildId || "") !== String(previous.buildId || "");
+    return clientChanged || serverChanged;
+}
+
+function formatNikkeChangelogEntry(info, date) {
+    const stamp = nikkeVersionStamp(info);
+    return [
+        `## ${date} — client ${stamp.client || "unknown"}, server ${stamp.server || "unknown"}`,
+        "",
+        `- Client: ${stamp.clientFull || "unknown"}`,
+        `- Server build: ${stamp.server || "unknown"}`,
+        `- Launcher: ${stamp.launcher || "not published"}`,
+        `- Game CDN: ${stamp.cdn || "unknown"}`,
+        "",
+    ].join("\n");
+}
+
+module.exports = {
+    fetchGameCatalog,
+    fetchLauncherVersion,
+    burstFlags,
+    LAUNCHER_VERSION_URL,
+    nikkeVersionStamp,
+    gameVersionChanged,
+    formatNikkeChangelogEntry,
+};

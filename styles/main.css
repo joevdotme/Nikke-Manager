@@ -63,6 +63,7 @@ html.modal-open {
     margin-top: 1px;
     font-family: "Segoe UI", system-ui, sans-serif;
     letter-spacing: 0.02em;
+    white-space: pre-line;
 }
 .badge {
     font-size: 13px;
