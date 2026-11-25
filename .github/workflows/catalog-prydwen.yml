@@ -1,0 +1,17 @@
+name: catalog-prydwen
+
+on:
+  schedule:
+    - cron: "30 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prydwen:
+    if: github.repository == 'joevdotme/Nikke-Manager'
+    uses: ./.github/workflows/catalog-update.yml
+    secrets: inherit
+    with:
+      source: prydwen

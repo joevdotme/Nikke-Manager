@@ -1,0 +1,31 @@
+name: catalog-validate
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  catalog-validate:
+    if: github.repository == 'joevdotme/Nikke-Manager'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Breaking-change check
+        run: node scripts/validate-catalog.js --base "origin/${{ github.base_ref }}"
+      - name: Import merge gate
+        run: node scripts/verify-import-merge.js
+      - name: Weapon gate
+        run: |
+          if git diff --name-only "origin/${{ github.base_ref }}...HEAD" | grep -qx 'knowledge/nikke-database.js'; then
+            node scripts/verify-weapons.js
+          else
+            echo "knowledge/nikke-database.js unchanged; weapon gate skipped"
+          fi
