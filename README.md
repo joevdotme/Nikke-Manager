@@ -2,7 +2,7 @@
 
 A browser-based roster manager for Nikke: Goddess of Victory. Track overload gear rolls, skill levels, Collection Dolls, Harmony Cubes, bond progress, and solo raid teams — all in one place.
 
-**Live app:** https://pilgrimworks.github.io/Nikke-Manager
+**Live app:** https://joevdotme.github.io/Nikke-Manager
 
 ---
 
@@ -43,7 +43,9 @@ The Equipment, Skills, Dolls, and Bond views can be filtered by element or by a 
 
 ## Getting started
 
-Open the app at https://pilgrimworks.github.io/Nikke-Manager
+Open the app at https://joevdotme.github.io/Nikke-Manager
+
+The published Chrome extension still imports into https://pilgrimworks.github.io/Nikke-Manager and into localhost. It does not inject into this fork's Pages host. Cloud sign-in uses the upstream Firebase project and stays off on this host until that project allows the domain.
 
 ### Option 1 — Auto-import with the browser extension (recommended)
 
@@ -98,4 +100,4 @@ Your data is stored in your browser's local storage automatically. To back it up
 
 ## Support & feature requests
 
-Found a bug or have an idea? Open an issue on [GitHub](https://github.com/PilgrimWorks/Nikke-Manager/issues) — all feedback welcome.
+Found a bug or have an idea? Open an issue on [this fork](https://github.com/joevdotme/Nikke-Manager/issues).
