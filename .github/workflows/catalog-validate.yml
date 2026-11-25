@@ -24,8 +24,9 @@ jobs:
         run: node scripts/verify-import-merge.js
       - name: Weapon gate
         run: |
-          if git diff --name-only "origin/${{ github.base_ref }}...HEAD" | grep -qx 'knowledge/nikke-database.js'; then
+          # A removed weapon line is an edit. Added roster rows and boss rewrites do not remove one.
+          if git diff -U0 "origin/${{ github.base_ref }}...HEAD" -- knowledge/nikke-database.js | grep -E '^-.*weapon:' >/dev/null; then
             node scripts/verify-weapons.js
           else
-            echo "knowledge/nikke-database.js unchanged; weapon gate skipped"
+            echo "No weapon field changes; weapon gate skipped"
           fi
