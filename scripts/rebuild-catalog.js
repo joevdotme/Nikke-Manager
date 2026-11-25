@@ -67,15 +67,20 @@ async function updateGame(db, state, sections) {
     const launcherUrl = process.env.NIKKE_LAUNCHER_VERSION_URL || LAUNCHER_VERSION_URL;
     const launcher = await fetchLauncherVersion(launcherUrl);
     const prev = state.game || {};
-    let scrape = catalog.catalogHash !== prev.catalogHash;
-    if (launcher) {
-        const launcherOnly =
-            launcher.launcherVersion !== prev.launcherVersion &&
-            launcher.buildId === prev.buildId &&
-            launcher.cdnRoot === prev.cdnRoot;
-        scrape = !launcherOnly && (launcher.buildId !== prev.buildId || launcher.cdnRoot !== prev.cdnRoot);
-        if (launcherOnly) lines.push(`Launcher-only bump ${launcher.launcherVersion}; game tables not scraped.`);
-    }
+    const hashChanged = catalog.catalogHash !== prev.catalogHash;
+    const buildChanged = !!(
+        launcher &&
+        (String(launcher.buildId || "") !== String(prev.buildId || "") ||
+            (launcher.cdnRoot || null) !== (prev.cdnRoot || null))
+    );
+    const launcherOnly = !!(
+        launcher &&
+        (launcher.launcherVersion || null) !== (prev.launcherVersion || null) &&
+        !buildChanged &&
+        !hashChanged
+    );
+    const scrape = hashChanged || buildChanged;
+    if (launcherOnly) lines.push(`Launcher-only bump ${launcher.launcherVersion}; game tables not scraped.`);
     state.game = {
         catalogHash: catalog.catalogHash,
         syncedAt: catalog.syncedAt,
@@ -85,7 +90,7 @@ async function updateGame(db, state, sections) {
         cdnRoot: launcher ? launcher.cdnRoot : prev.cdnRoot || null,
     };
     if (!scrape) {
-        lines.push("Catalog fingerprint unchanged.");
+        if (!launcherOnly) lines.push("Game build and catalog fingerprint unchanged.");
         sections.push({ source: "game", lines });
         return db.src;
     }
@@ -127,6 +132,7 @@ async function updatePrydwen(db, state, sections) {
     }
     let src = db.src;
     const nikkes = db.nikkes;
+    let failed = false;
     for (let i = 0; i < nikkes.length; i++) {
         const entry = nikkes[i];
         const slug = makeSlug(entry.name, entry);
@@ -134,6 +140,7 @@ async function updatePrydwen(db, state, sections) {
         const page = await fetchCharacterPage(slug);
         if (page.status !== 200) {
             console.log(`HTTP ${page.status}`);
+            failed = true;
             await sleep(400);
             continue;
         }
@@ -153,8 +160,12 @@ async function updatePrydwen(db, state, sections) {
         }
         await sleep(400);
     }
-    if (!lines.length) lines.push("No weapon changes.");
-    state.prydwen = { indexHash };
+    if (failed) {
+        lines.push("Some Prydwen pages failed. Index hash was not saved, so the next run retries.");
+    } else {
+        if (!lines.length) lines.push("No weapon changes.");
+        state.prydwen = { indexHash };
+    }
     sections.push({ source: "prydwen", lines });
     return src;
 }
@@ -162,6 +173,9 @@ async function updatePrydwen(db, state, sections) {
 async function updateEnikk(db, state, sections) {
     const lines = [];
     const raids = await fetchSoloRaids();
+    if (!raids.length) {
+        throw new Error("enikk returned no solo raid seasons");
+    }
     const latest = raids[raids.length - 1];
     const window = seasonWindow(state, latest.season, new Date());
     state.enikk = window.enikk;

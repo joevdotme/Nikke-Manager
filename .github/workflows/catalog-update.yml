@@ -20,12 +20,19 @@ on:
 permissions:
   contents: read
 
+# One catalog write at a time. A second run waits. A third cancels the one still waiting.
+concurrency:
+  group: catalog-data
+  cancel-in-progress: false
+
 jobs:
   update:
     if: github.repository == 'joevdotme/Nikke-Manager'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: "22"

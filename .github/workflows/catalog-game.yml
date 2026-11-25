@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: catalog-data
+  cancel-in-progress: false
+
 jobs:
   game:
     if: github.repository == 'joevdotme/Nikke-Manager'

@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: catalog-data
+  cancel-in-progress: false
+
 jobs:
   enikk:
     if: github.repository == 'joevdotme/Nikke-Manager'
