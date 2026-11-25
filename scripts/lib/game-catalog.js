@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const { fetchJson, fetchText } = require("./http");
+const { fetchJson, fetchText, postText } = require("./http");
 
 // The blablalink character CDN stores JSON under md5 object keys. The public
 // nikke-api sync is the readable form of that same table (names, resource ids,
@@ -89,18 +89,28 @@ async function fetchGameCatalog() {
     };
 }
 
+const LAUNCHER_VERSION_URL = "https://www.jupiterlauncher.com/api/v1/fleet.repo.game.RepoSVC/GetVersion";
+
 async function fetchLauncherVersion(url) {
     if (!url) return null;
-    const res = await fetchText(url);
+    const res = url.includes("RepoSVC/GetVersion")
+        ? await postText(url, JSON.stringify({ game_id: 16601, branch_id: 1 }), {
+              Referer: "https://www.jupiterlauncher.com/",
+              Origin: "https://www.jupiterlauncher.com",
+          })
+        : await fetchText(url);
     if (res.status < 200 || res.status >= 300 || !res.body) {
         throw new Error(`Launcher version URL returned HTTP ${res.status}`);
     }
     const data = JSON.parse(res.body);
+    if (data.result && data.result.error_code) {
+        throw new Error(`Launcher version error ${data.result.error_code}: ${data.result.error_message || "unknown"}`);
+    }
     const info = data.version_info || {};
     const launcher = data.launcher_version_info || {};
     let cdnRoot = null;
     if (info.cos_repo_files) {
-        const repos = JSON.parse(info.cos_repo_files);
+        const repos = typeof info.cos_repo_files === "string" ? JSON.parse(info.cos_repo_files) : info.cos_repo_files;
         const game = (repos || []).find((r) => r.repository_type === "Game" || (r.repository_name && r.repository_name.en_US === "Game"));
         cdnRoot = game ? game.cdn_root : null;
     }
@@ -112,4 +122,4 @@ async function fetchLauncherVersion(url) {
     };
 }
 
-module.exports = { fetchGameCatalog, fetchLauncherVersion, burstFlags };
+module.exports = { fetchGameCatalog, fetchLauncherVersion, burstFlags, LAUNCHER_VERSION_URL };

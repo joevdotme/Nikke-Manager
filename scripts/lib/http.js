@@ -97,4 +97,4 @@ function postText(url, body, headers) {
     });
 }
 
-module.exports = { fetchText, fetchJson };
+module.exports = { fetchText, fetchJson, postText };

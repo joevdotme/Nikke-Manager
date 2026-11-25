@@ -10,9 +10,9 @@
  * supposed to run fails. Exit 0 when the run finished, including a no-op.
  *
  * Game identity comes from the public catalog synced off the blablalink CDN.
- * Set NIKKE_LAUNCHER_VERSION_URL to a launcher version document. A change to
- * launcher_version_info alone does not scrape. build_id or the Game cdn_root
- * does. Without that URL, the scrape runs when the catalog fingerprint changes.
+ * The game job polls the public launcher GetVersion endpoint. Set
+ * NIKKE_LAUNCHER_VERSION_URL to override it. A change to launcher_version_info
+ * alone does not scrape. build_id or the Game cdn_root does.
  *
  * enikk is solo raid only, and only inside the 8 day window that starts the
  * first time a season id is seen.
@@ -25,7 +25,7 @@ const path = require("path");
 const { loadDatabaseSource, replaceWeapon, replaceBosses, appendNikkes } = require("./lib/db-file");
 const { makeSlug, extractWeapon, fetchCharacterPage } = require("./lib/prydwen-weapon");
 const { fetchText } = require("./lib/http");
-const { fetchGameCatalog, fetchLauncherVersion } = require("./lib/game-catalog");
+const { fetchGameCatalog, fetchLauncherVersion, LAUNCHER_VERSION_URL } = require("./lib/game-catalog");
 const { fetchSoloRaids, seasonWindow } = require("./lib/enikk");
 
 const root = path.join(__dirname, "..");
@@ -64,7 +64,7 @@ function changelog(sections) {
 async function updateGame(db, state, sections) {
     const lines = [];
     const catalog = await fetchGameCatalog();
-    const launcherUrl = process.env.NIKKE_LAUNCHER_VERSION_URL || "";
+    const launcherUrl = process.env.NIKKE_LAUNCHER_VERSION_URL || LAUNCHER_VERSION_URL;
     const launcher = await fetchLauncherVersion(launcherUrl);
     const prev = state.game || {};
     let scrape = catalog.catalogHash !== prev.catalogHash;

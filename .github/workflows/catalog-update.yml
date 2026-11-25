@@ -31,8 +31,8 @@ jobs:
           node-version: "22"
       - name: Rebuild catalog
         env:
-          # Optional. A launcher version document. A launcher-only bump does not scrape.
-          # Without it, the game job scrapes when the public catalog fingerprint changes.
+          # Optional override. Empty uses the public GetVersion endpoint in scripts/lib/game-catalog.js.
+          # A launcher-only bump does not scrape.
           NIKKE_LAUNCHER_VERSION_URL: ${{ vars.NIKKE_LAUNCHER_VERSION_URL }}
         run: node scripts/rebuild-catalog.js --source "${{ inputs.source }}" --write --changelog "$RUNNER_TEMP/changelog.md"
       - name: Open data pull request
