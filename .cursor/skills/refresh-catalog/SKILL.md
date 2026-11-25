@@ -11,3 +11,5 @@ The scheduled jobs on this fork open `chore(data): updated game resources` pull 
 2. Run `make verify` when you want the same gates as `catalog-validate`. `verify-weapons.js` only compares. It does not edit the database.
 3. Run `make serve` and import with the installed extension.
 4. Do not commit the knowledge diff and do not open a pull request from this checkout. The fork workflows do that when a source actually changes.
+
+Enabling those workflows on a fork or on upstream is a separate setup. Follow `.cursor/skills/catalog-automation/SKILL.md` and `docs/playbooks/catalog-automation.md`.
