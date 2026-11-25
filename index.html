@@ -114,7 +114,7 @@
                         style="display: none"
                         onchange="importData(event)"
                     />
-                    <button id="auth-btn" class="btn btn-sm btn-auth" onclick="handleAuth()">☁ Sign In</button>
+                    <button id="auth-btn" class="btn btn-sm btn-auth" onclick="handleAuth()" hidden>☁ Sign In</button>
                 </div>
             </div>
 
@@ -352,6 +352,7 @@
         <!-- App scripts (load order matters: state → helpers → firebase → renderers → init) -->
         <script src="js/state.js?v=b528dd5"></script>
         <script src="js/helpers.js?v=b528dd5"></script>
+        <script src="js/features.js?v=b528dd5"></script>
         <script src="js/firebase.js?v=b528dd5"></script>
         <script src="js/scraper-import.js?v=b528dd5"></script>
         <script src="js/ui-actions.js?v=b528dd5"></script>

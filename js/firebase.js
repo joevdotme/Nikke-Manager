@@ -12,12 +12,17 @@ const firebaseConfig = {
     measurementId: "G-H4RGX62XH0",
 };
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+const firebaseEnabled = typeof window !== "undefined" && window.NIKKE_FEATURES && window.NIKKE_FEATURES.firebase === true;
 
-// Enable offline persistence so Firestore works without connection
-db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+let auth = null;
+let db = null;
+if (firebaseEnabled) {
+    firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    db = firebase.firestore();
+    // Enable offline persistence so Firestore works without connection
+    db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+}
 
 let currentUser = null;
 let _wasSignedIn = false; // tracks whether user was signed in this session (to detect sign-out vs cold load)
@@ -44,7 +49,7 @@ let _intentionalWipe = false;
 
 // Save to Firestore (debounced)
 function saveToCloud() {
-    if (!currentUser) return;
+    if (!firebaseEnabled || !currentUser) return;
     // Guard: never push empty state to cloud unless user explicitly wiped
     if (state.nikkes.length === 0 && !_intentionalWipe) return;
     if (_saveTimeout) clearTimeout(_saveTimeout);
@@ -218,10 +223,12 @@ async function onAuthChanged(user) {
 
 // Defer registration until the DOM is ready so app.js (which defines render) has
 // loaded. Handle the already-loaded case too, in case this ever runs after DOMContentLoaded.
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => auth.onAuthStateChanged(onAuthChanged));
-} else {
-    auth.onAuthStateChanged(onAuthChanged);
+if (firebaseEnabled) {
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => auth.onAuthStateChanged(onAuthChanged));
+    } else {
+        auth.onAuthStateChanged(onAuthChanged);
+    }
 }
 
 function updateAuthUI() {
@@ -241,6 +248,7 @@ function updateAuthUI() {
 }
 
 async function handleAuth() {
+    if (!firebaseEnabled || !auth) return;
     if (currentUser) {
         if (
             confirm(
@@ -276,7 +284,7 @@ function save() {
     try {
         localStorage.setItem("nikke_v8", JSON.stringify(state));
     } catch (e) {}
-    saveToCloud(); // sync to Firestore if signed in
+    if (firebaseEnabled) saveToCloud();
 }
 
 function load() {
