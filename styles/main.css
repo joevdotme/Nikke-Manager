@@ -1649,6 +1649,10 @@ details[open] > .verdict-title {
 }
 
 /* ── Auth & Sync ── */
+/* .btn-sm sets display:inline-flex, which overrides the UA [hidden] rule. */
+#auth-btn[hidden] {
+    display: none;
+}
 .btn-auth {
     border-color: #166534;
     color: #4ade80;
