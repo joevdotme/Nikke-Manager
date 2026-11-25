@@ -3,17 +3,18 @@ Title. Squash merge uses this as the commit on main, and that line is the releas
 
     <type>(<scope>): <imperative summary>
 
-Types: feat, fix, docs, chore, ci, refactor, test, build, perf.
-Scope is optional and short: auth, catalog, data, dev.
+Types: feat, fix, chore, ci, refactor, test, build, perf.
+Scope is optional and short: auth, catalog, data, dev, docs.
 The summary is lowercase, imperative, and has no trailing period.
-feat and fix are the user-facing changelog. Use chore, docs, or ci when the change should not read as a product change.
+feat and fix are the user-facing changelog. Use chore or ci when the change should not read as a product change.
+Documentation-only changes use chore(docs), not a docs type.
 Catalog data pulls keep this exact title: chore(data): updated game resources
 
-Labels. Apply one type label. Do not put enhancement on a chore, a docs change, or a ci change.
+Labels. Apply one type label. Do not put enhancement on a chore or a ci change.
 
     feat, perf        → enhancement
     fix               → bug
-    docs              → documentation
+    chore(docs)       → documentation
     chore, ci, refactor, test, build → no type label
 
 Add good first issue or help wanted only when that is true.
