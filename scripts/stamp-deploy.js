@@ -4,9 +4,10 @@
  * commit being published. Does not edit VERSION and does not write back
  * to the git checkout.
  *
- * Also records the Nikke game version and server build this deploy was
+ * Also records the Nikke client version and server build this deploy was
  * published for. A failed version lookup leaves those fields blank and
- * still publishes.
+ * still publishes. VERSION is read from the file. scripts/bump-version.js
+ * writes that file before this stamp runs.
  *
  *   node scripts/stamp-deploy.js dist
  */
@@ -82,7 +83,7 @@ window.BUILD_INFO = {
     );
     fs.writeFileSync(indexPath, stamped);
     const nikkeLabel = nikke.client
-        ? ` game ${nikke.client} server ${nikke.server || "—"}`
+        ? ` client ${nikke.client} server ${nikke.server || "—"}`
         : " Nikke versions unavailable";
     console.log(`Stamped ${dest} v${version} build ${commit} (${date})${nikkeLabel}`);
 }

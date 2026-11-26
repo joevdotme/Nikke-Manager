@@ -147,9 +147,9 @@ function gameVersionChanged(prev, info) {
 function formatNikkeChangelogEntry(info, date) {
     const stamp = nikkeVersionStamp(info);
     return [
-        `## ${date} — game ${stamp.client || "unknown"}, server ${stamp.server || "unknown"}`,
+        `## ${date} — client ${stamp.client || "unknown"}, server ${stamp.server || "unknown"}`,
         "",
-        `- Game: ${stamp.clientFull || "unknown"}`,
+        `- Client: ${stamp.clientFull || "unknown"}`,
         `- Server: ${stamp.server || "unknown"}`,
         `- Game CDN: ${stamp.cdn || "unknown"}`,
         "",

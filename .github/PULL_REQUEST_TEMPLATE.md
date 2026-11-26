@@ -9,6 +9,7 @@ The summary is lowercase, imperative, and has no trailing period.
 feat and fix are the user-facing changelog. Use chore or ci when the change should not read as a product change.
 Documentation-only changes use chore(docs), not a docs type.
 Catalog data pulls keep this exact title: chore(data): updated game resources
+VERSION is bumped on main after the squash merge. feat is minor. fix, perf, and chore(data) are patch. A breaking feat, fix, or perf is major. Leave VERSION alone unless this pull request needs a different number.
 
 Labels. Apply one type label. Do not put enhancement on a chore or a ci change.
 

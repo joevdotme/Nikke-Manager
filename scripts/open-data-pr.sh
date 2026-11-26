@@ -50,7 +50,7 @@ body="$(mktemp)"
     echo "## How to test"
     echo
     echo "1. \`catalog-validate\` passes on this pull request. A failing check stays open and does not deploy."
-    echo "2. After squash merge, Pages publishes \`main\`. \`VERSION\` does not change."
+    echo "2. After squash merge, Pages publishes \`main\` and writes the next patch number into \`VERSION\`."
     echo
     echo "## Screenshots"
     echo

@@ -41,7 +41,7 @@ const statePath = path.join(root, "knowledge", "source-versions.json");
 const nikkeChangelogPath = path.join(root, "docs", "nikke-changelog.md");
 const NIKKE_CHANGELOG_HEADER = `# Nikke version changelog
 
-An entry is added when the published game version or server build changes.
+An entry is added when the published client version or server build changes.
 A Pages deploy that does not change those versions is not listed.
 
 `;
@@ -93,7 +93,7 @@ async function updateGame(db, state, sections) {
         const date = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
         pendingVersionEntry = formatNikkeChangelogEntry(published, date);
         const stamp = nikkeVersionStamp(published);
-        lines.push(`Game ${stamp.client || "unknown"}, server ${stamp.server || "unknown"}.`);
+        lines.push(`Client ${stamp.client || "unknown"}, server ${stamp.server || "unknown"}.`);
     }
     state.game = {
         catalogHash: catalog.catalogHash,
@@ -103,7 +103,7 @@ async function updateGame(db, state, sections) {
         cdnRoot: published ? published.cdnRoot : prev.cdnRoot || null,
     };
     if (!scrape) {
-        lines.push("Game build and catalog fingerprint unchanged.");
+        lines.push("Client build and catalog fingerprint unchanged.");
         sections.push({ source: "game", lines });
         return db.src;
     }

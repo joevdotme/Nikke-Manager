@@ -272,14 +272,14 @@ preloadNikkeIcons();
     if (b.commit) manager.push("build (" + b.commit + ")");
     if (b.date) manager.push(b.date);
     const lines = [manager.join(" · ")];
-    if (b.nikkeClient) lines.push("Game " + b.nikkeClient);
+    if (b.nikkeClient) lines.push("Client " + b.nikkeClient);
     if (b.nikkeServer) lines.push("Server " + b.nikkeServer);
     el.textContent = lines.join("\n");
     el.title = [
         "Manager " + (b.version || "?"),
         b.commit ? "Build: " + b.commit : "",
         b.date ? "Date: " + b.date : "",
-        b.nikkeClientFull || b.nikkeClient ? "Game: " + (b.nikkeClientFull || b.nikkeClient) : "",
+        b.nikkeClientFull || b.nikkeClient ? "Client: " + (b.nikkeClientFull || b.nikkeClient) : "",
         b.nikkeServer ? "Server: " + b.nikkeServer : "",
         b.nikkeCdn ? "Game CDN: " + b.nikkeCdn : "",
     ]

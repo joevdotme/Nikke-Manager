@@ -1,6 +1,6 @@
 # Catalog automation
 
-Scheduled jobs can rebuild `knowledge/nikke-database.js` and open a pull request titled `chore(data): updated game resources`. Squash auto-merge runs only after `catalog-validate` passes. `VERSION` does not change.
+Scheduled jobs can rebuild `knowledge/nikke-database.js` and open a pull request titled `chore(data): updated game resources`. Squash auto-merge runs only after `catalog-validate` passes. After that merge, Pages writes the next patch number into `VERSION`.
 
 The jobs are pinned to one repository on purpose. A fork, or an upstream copy, does nothing until you point that pin at your own `owner/repo` and create your own token. Do not reuse someone else's token.
 
@@ -71,9 +71,13 @@ You do not need `NIKKE_LAUNCHER_VERSION_URL`. The game job already posts to `htt
 
 ## Version changelog
 
-`docs/nikke-changelog.md` gains an entry only when the published game version (`version_info.version_name`) or server build (`version_info.build_id`) changes. The data pull request commits that file. A Pages deploy does not add a changelog commit.
+`docs/nikke-changelog.md` gains an entry only when the published client version (`version_info.version_name`) or server build (`version_info.build_id`) changes. The data pull request commits that file. A Pages deploy does not add a Nikke changelog commit.
 
-The site footer is stamped into the deploy artifact, not into git. It is three lines: manager version, build sha, and date; the game version (`version_info.version_name`); and the server build (`version_info.build_id`). The public version document has no separate server version string, so the server line is `build_id`. A failed version lookup leaves the game and server lines off and still publishes.
+The site footer is stamped into the deploy artifact. It is three lines: manager version, build sha, and date; the client version (`version_info.version_name`); and the server build (`version_info.build_id`). The public version document has no separate server version string, so the server line is `build_id`. A failed version lookup leaves the client and server lines off and still publishes.
+
+## Manager version
+
+Pages bumps `VERSION` on the push to `main`, then stamps that number into the artifact. `feat` bumps minor. `fix`, `perf`, and `chore(data)` bump patch. A `!` or `BREAKING CHANGE` on `feat`, `fix`, or `perf` bumps major. Other chores do not bump. A push that already edits `VERSION` is left alone. The bump commit is `chore(release): vX.Y.Z [skip ci]`, pushed with `CATALOG_GITHUB_TOKEN`, and it does not start another deploy. The token owner can push to `main` because administrators bypass the required check.
 
 ## First run
 

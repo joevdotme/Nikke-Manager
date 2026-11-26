@@ -12,5 +12,6 @@ Follow [docs/playbooks/catalog-automation.md](../../../docs/playbooks/catalog-au
 - Keep `scripts/open-data-pr.sh` on `CATALOG_GITHUB_TOKEN`. Do not switch the push or the pull request to `GITHUB_TOKEN`.
 - Use a 365-day expiration. GitHub rejects 366 and resets the form to 30 days.
 - Do not set `NIKKE_LAUNCHER_VERSION_URL` unless they want a different version document. The game job already calls the public launcher endpoint.
-- `docs/nikke-changelog.md` is updated only when the game version or server build changes, on the data pull request. The footer is three lines in the Pages artifact and is not committed: manager version, build, and date; game version; server build. Ignore `launcher_version_info`. It is the PC launcher app, not the game version.
+- `docs/nikke-changelog.md` is updated only when the client version or server build changes, on the data pull request. The footer is three lines: manager version, build, and date; client version; server build.
+- Pages writes `VERSION` on main after a shipping merge. `feat` is minor. `fix`, `perf`, and `chore(data)` are patch. A breaking `feat`, `fix`, or `perf` is major. Other chores do not bump. Ignore `launcher_version_info`.
 - Do not change branch protection on a repository you were not asked to configure. On `joevdotme/Nikke-Manager`, auto-merge, the `catalog-validate` check, and the secret are already in place. The token expires on Thursday, November 25, 2027.
