@@ -14,7 +14,7 @@ on:
         type: choice
         options:
           - game
-          - prydwen
+          - fandom
           - enikk
 
 permissions:

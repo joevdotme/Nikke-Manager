@@ -1,4 +1,4 @@
-name: catalog-prydwen
+name: catalog-fandom
 
 on:
   schedule:
@@ -13,9 +13,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  prydwen:
+  fandom:
     if: github.repository == 'joevdotme/Nikke-Manager'
     uses: ./.github/workflows/catalog-update.yml
     secrets: inherit
     with:
-      source: prydwen
+      source: fandom

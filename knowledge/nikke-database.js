@@ -82,7 +82,8 @@ const COLLECTION_DOLLS = [
 
 const PRIORITY_TIERS = ["Ideal", "Passable"];
 
-// Full Nikke roster from Prydwen.gg (name, burst, element, weapon)
+// Nikke roster. Weapon types are checked against the Nikke Goddess of Victory International Wiki (CC BY-SA):
+// https://nikke-goddess-of-victory-international.fandom.com/wiki/Weapon
 // Burst: burst1/burst2/burst3 booleans; Element: Fire, Water, Wind, Electric, Iron
 // Weapon: see NIKKE_WEAPONS for code ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ full-name mapping
 const NIKKE_DATABASE = [

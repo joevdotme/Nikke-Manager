@@ -3,7 +3,7 @@
  * Rebuild knowledge files from public sources.
  *
  *   node scripts/rebuild-catalog.js --write
- *   node scripts/rebuild-catalog.js --source game|prydwen|enikk --write
+ *   node scripts/rebuild-catalog.js --source game|fandom|enikk --write
  *   node scripts/rebuild-catalog.js --write --changelog /tmp/changelog.md
  *
  * Does not commit or open a pull request. Exit 1 when a source that was
@@ -17,14 +17,15 @@
  * enikk is solo raid only, and only inside the 8 day window that starts the
  * first time a season id is seen.
  *
- * Prydwen weapon text is written here. scripts/verify-weapons.js only compares.
+ * Weapon types come from the Fandom wiki through the MediaWiki API.
+ * scripts/verify-weapons.js only compares. The wiki text is CC BY-SA.
  */
 const fs = require("fs");
 const os = require("os");
+const crypto = require("crypto");
 const path = require("path");
 const { loadDatabaseSource, replaceWeapon, replaceBosses, appendNikkes } = require("./lib/db-file");
-const { makeSlug, extractWeapon, fetchCharacterPage, fetchPrydwen, isChallenge } = require("./lib/prydwen-weapon");
-const { fetchText } = require("./lib/http");
+const { ATTRIBUTION, fetchPlayableWeapons } = require("./lib/fandom-weapon");
 const {
     fetchGameCatalog,
     fetchLauncherVersion,
@@ -50,10 +51,6 @@ let pendingVersionEntry = null;
 function argValue(flag) {
     const i = process.argv.indexOf(flag);
     return i >= 0 ? process.argv[i + 1] : null;
-}
-
-function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function readState() {
@@ -129,73 +126,44 @@ async function updateGame(db, state, sections) {
     return appendNikkes(db.src, additions);
 }
 
-async function updatePrydwen(db, state, sections) {
-    const lines = [];
-    const indexUrl = process.env.PRYDWEN_INDEX_URL || "https://www.prydwen.gg/nikke/characters";
-    const index = await fetchPrydwen(indexUrl);
-    if (isChallenge(index)) {
-        const err = new Error(`Prydwen blocked this machine (HTTP ${index.status}). Weapon updates were skipped.`);
-        err.code = "PRYDWEN_BLOCKED";
-        throw err;
+async function updateFandom(db, state, sections) {
+    const lines = [ATTRIBUTION];
+    const rows = await fetchPlayableWeapons();
+    const byName = new Map();
+    for (const row of rows) {
+        if (!row.weapon) continue;
+        byName.set(row.name.toLowerCase(), row);
     }
-    if (index.status !== 200 || !index.body) {
-        throw new Error(`Prydwen index returned HTTP ${index.status}`);
-    }
-    const crypto = require("crypto");
-    const indexHash = crypto.createHash("sha256").update(index.body).digest("hex");
-    if (state.prydwen && state.prydwen.indexHash === indexHash) {
-        lines.push("Character index hash unchanged.");
-        sections.push({ source: "prydwen", lines });
-        state.prydwen = { indexHash };
+    const hash = crypto
+        .createHash("sha256")
+        .update(
+            [...byName.values()]
+                .map((row) => `${row.name}\t${row.weapon}`)
+                .sort()
+                .join("\n"),
+        )
+        .digest("hex");
+    if (state.fandom && state.fandom.hash === hash) {
+        lines.push("Wiki weapon list unchanged.");
+        sections.push({ source: "fandom", lines });
         return db.src;
     }
     let src = db.src;
-    const nikkes = db.nikkes;
-    let failed = false;
-    for (let i = 0; i < nikkes.length; i++) {
-        const entry = nikkes[i];
-        const slug = makeSlug(entry.name, entry);
-        process.stdout.write(`[${i + 1}/${nikkes.length}] ${entry.name}... `);
-        const page = await fetchCharacterPage(slug);
-        if (isChallenge(page)) {
-            console.log("blocked");
-            lines.push(`Prydwen blocked this machine (HTTP ${page.status}). Weapon updates were skipped.`);
-            failed = true;
-            sections.push({ source: "prydwen", lines });
-            const err = new Error(lines[lines.length - 1]);
-            err.code = "PRYDWEN_BLOCKED";
-            err.src = src;
-            throw err;
-        }
-        if (page.status !== 200) {
-            console.log(`HTTP ${page.status}`);
-            failed = true;
-            await sleep(400);
+    const missing = [];
+    for (const entry of db.nikkes) {
+        const row = byName.get(entry.name.toLowerCase());
+        if (!row) {
+            missing.push(entry.name);
             continue;
         }
-        const weapon = extractWeapon(page.body);
-        if (!weapon) {
-            console.log("no weapon");
-            await sleep(400);
-            continue;
-        }
-        if (weapon !== entry.weapon) {
-            src = replaceWeapon(src, entry.name, entry.weapon, weapon);
-            entry.weapon = weapon;
-            lines.push(`Changed ${entry.name} weapon to ${weapon}.`);
-            console.log(`-> ${weapon}`);
-        } else {
-            console.log(weapon);
-        }
-        await sleep(400);
+        if (row.weapon === entry.weapon) continue;
+        src = replaceWeapon(src, entry.name, entry.weapon, row.weapon);
+        lines.push(`Changed ${entry.name} weapon to ${row.weapon}.`);
     }
-    if (failed) {
-        lines.push("Some Prydwen pages failed. Index hash was not saved, so the next run retries.");
-    } else {
-        if (!lines.length) lines.push("No weapon changes.");
-        state.prydwen = { indexHash };
-    }
-    sections.push({ source: "prydwen", lines });
+    if (!lines.some((line) => line.startsWith("Changed "))) lines.push("No weapon changes.");
+    if (missing.length) lines.push(`Wiki has no weapon for ${missing.join(", ")}.`);
+    state.fandom = { hash };
+    sections.push({ source: "fandom", lines });
     return src;
 }
 
@@ -230,27 +198,25 @@ async function main() {
     const write = process.argv.includes("--write");
     const source = argValue("--source") || "all";
     const changelogPath = argValue("--changelog");
-    const selected = source === "all" ? ["game", "prydwen", "enikk"] : [source];
+    const selected = source === "all" ? ["game", "fandom", "enikk"] : [source === "prydwen" ? "fandom" : source];
     const state = readState();
     const db = loadDatabaseSource(dbPath);
     const sections = [];
     let src = db.src;
     db.src = src;
-    let prydwenBlocked = false;
+    let fandomFailed = false;
 
     for (const name of selected) {
         try {
             if (name === "game") src = await updateGame(db, state, sections);
-            else if (name === "prydwen") src = await updatePrydwen(db, state, sections);
+            else if (name === "fandom") src = await updateFandom(db, state, sections);
             else if (name === "enikk") src = await updateEnikk(db, state, sections);
             else throw new Error(`Unknown source ${name}`);
         } catch (err) {
-            if (err.code !== "PRYDWEN_BLOCKED") throw err;
-            prydwenBlocked = true;
-            if (err.src) src = err.src;
-            db.src = src;
-            if (!sections.some((section) => section.source === "prydwen")) {
-                sections.push({ source: "prydwen", lines: [err.message] });
+            if (name !== "fandom") throw err;
+            fandomFailed = true;
+            if (!sections.some((section) => section.source === "fandom")) {
+                sections.push({ source: "fandom", lines: [`${ATTRIBUTION}`, err.message] });
             }
             console.error(err.message);
             if (selected.length > 1) console.error("Game and enikk still run.");
@@ -279,7 +245,7 @@ async function main() {
             fs.writeFileSync(nikkeChangelogPath, bodyText + pendingVersionEntry);
         }
     }
-    if (prydwenBlocked && selected.length === 1) process.exitCode = 1;
+    if (fandomFailed && selected.length === 1) process.exitCode = 1;
 }
 
 function loadRefreshed(src) {

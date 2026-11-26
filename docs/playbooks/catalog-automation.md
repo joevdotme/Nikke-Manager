@@ -11,7 +11,7 @@ On `joevdotme/Nikke-Manager` this is already done. The token is named `Nikke cat
 Replace `joevdotme/Nikke-Manager` with your `owner/repo` in:
 
 - `.github/workflows/catalog-game.yml`
-- `.github/workflows/catalog-prydwen.yml`
+- `.github/workflows/catalog-fandom.yml`
 - `.github/workflows/catalog-enikk.yml`
 - `.github/workflows/catalog-update.yml`
 - `.github/workflows/catalog-validate.yml`
@@ -88,7 +88,11 @@ After the workflow files are on the default branch, open Actions → `catalog-ga
 - The `catalog-validate` check starts on that pull request.
 - A green check squash-merges. A red check stays open and does not deploy.
 
-`catalog-prydwen` and `catalog-enikk` can be dispatched the same way. Prydwen walks every character page, so the game dispatch is the shorter first test.
+`catalog-fandom` and `catalog-enikk` can be dispatched the same way. The game dispatch is the shorter first test.
+
+## Weapon types
+
+Weapon types are read from the [Nikke Goddess of Victory International Wiki](https://nikke-goddess-of-victory-international.fandom.com/wiki/Weapon) through the MediaWiki API, not by downloading Prydwen. Fandom's [Help:Licensing](https://community.fandom.com/wiki/Help:Licensing) says wiki text is CC BY-SA 3.0 unless a page says otherwise. This wiki's API reports the license as CC-BY-SA and points at https://www.fandom.com/licensing. nikke.gg labels the same wiki CC BY-SA 4.0. The catalog credits the 3.0 terms Fandom's help page states, with a link to the Weapon article. That link is the attribution the license accepts. The job copies the weapon type code only. It does not copy article text, so the app is not relicensed.
 
 ## Rotation
 
