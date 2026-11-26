@@ -44,19 +44,37 @@ function extractWeapon(html) {
     return null;
 }
 
+const PRYDWEN_HEADERS = {
+    "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+};
+
 function isChallenge(res) {
     const mitigated = res.headers && (res.headers["cf-mitigated"] || res.headers["CF-Mitigated"]);
     return res.status === 403 || mitigated === "challenge" || /Just a moment/i.test(res.body || "");
 }
 
+function blockedError(status) {
+    const err = new Error(`Prydwen blocked this machine (HTTP ${status}). Weapon updates were skipped.`);
+    err.code = "PRYDWEN_BLOCKED";
+    err.status = status;
+    return err;
+}
+
+async function fetchPrydwen(url) {
+    let res = await fetchText(url);
+    if (!isChallenge(res)) return res;
+    // A home network often rejects the catalog agent and accepts a browser header set.
+    res = await fetchText(url, PRYDWEN_HEADERS);
+    if (isChallenge(res)) throw blockedError(res.status);
+    return res;
+}
+
 async function fetchCharacterPage(slug) {
     const url = `https://www.prydwen.gg/nikke/characters/${slug}`;
-    const res = await fetchText(url);
-    if (isChallenge(res)) {
-        const err = new Error(`Prydwen blocked the request for ${slug} (HTTP ${res.status})`);
-        err.code = "PRYDWEN_BLOCKED";
-        throw err;
-    }
+    const res = await fetchPrydwen(url);
     return { url, status: res.status, body: res.body };
 }
 
@@ -65,5 +83,6 @@ module.exports = {
     makeSlug,
     extractWeapon,
     fetchCharacterPage,
+    fetchPrydwen,
     isChallenge,
 };

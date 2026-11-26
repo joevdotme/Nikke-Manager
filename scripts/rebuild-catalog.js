@@ -23,7 +23,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { loadDatabaseSource, replaceWeapon, replaceBosses, appendNikkes } = require("./lib/db-file");
-const { makeSlug, extractWeapon, fetchCharacterPage } = require("./lib/prydwen-weapon");
+const { makeSlug, extractWeapon, fetchCharacterPage, fetchPrydwen } = require("./lib/prydwen-weapon");
 const { fetchText } = require("./lib/http");
 const {
     fetchGameCatalog,
@@ -131,7 +131,8 @@ async function updateGame(db, state, sections) {
 
 async function updatePrydwen(db, state, sections) {
     const lines = [];
-    const index = await fetchText("https://www.prydwen.gg/nikke/characters");
+    const indexUrl = process.env.PRYDWEN_INDEX_URL || "https://www.prydwen.gg/nikke/characters";
+    const index = await fetchPrydwen(indexUrl);
     if (index.status !== 200 || !index.body) {
         throw new Error(`Prydwen index returned HTTP ${index.status}`);
     }
@@ -150,7 +151,17 @@ async function updatePrydwen(db, state, sections) {
         const entry = nikkes[i];
         const slug = makeSlug(entry.name, entry);
         process.stdout.write(`[${i + 1}/${nikkes.length}] ${entry.name}... `);
-        const page = await fetchCharacterPage(slug);
+        let page;
+        try {
+            page = await fetchCharacterPage(slug);
+        } catch (err) {
+            if (err.code !== "PRYDWEN_BLOCKED") throw err;
+            console.log("blocked");
+            lines.push(err.message);
+            sections.push({ source: "prydwen", lines });
+            err.src = src;
+            throw err;
+        }
         if (page.status !== 200) {
             console.log(`HTTP ${page.status}`);
             failed = true;
@@ -220,12 +231,26 @@ async function main() {
     const sections = [];
     let src = db.src;
     db.src = src;
+    let prydwenBlocked = false;
 
     for (const name of selected) {
-        if (name === "game") src = await updateGame(db, state, sections);
-        else if (name === "prydwen") src = await updatePrydwen(db, state, sections);
-        else if (name === "enikk") src = await updateEnikk(db, state, sections);
-        else throw new Error(`Unknown source ${name}`);
+        try {
+            if (name === "game") src = await updateGame(db, state, sections);
+            else if (name === "prydwen") src = await updatePrydwen(db, state, sections);
+            else if (name === "enikk") src = await updateEnikk(db, state, sections);
+            else throw new Error(`Unknown source ${name}`);
+        } catch (err) {
+            if (err.code !== "PRYDWEN_BLOCKED") throw err;
+            prydwenBlocked = true;
+            if (err.src) src = err.src;
+            db.src = src;
+            if (!sections.some((section) => section.source === "prydwen")) {
+                sections.push({ source: "prydwen", lines: [err.message] });
+            }
+            console.error(err.message);
+            if (selected.length > 1) console.error("Game and enikk still run.");
+            continue;
+        }
         db.src = src;
         if (name === "game" || name === "enikk") {
             // Keep the in-memory lists aligned with src for the next source.
@@ -249,6 +274,7 @@ async function main() {
             fs.writeFileSync(nikkeChangelogPath, bodyText + pendingVersionEntry);
         }
     }
+    if (prydwenBlocked && selected.length === 1) process.exitCode = 1;
 }
 
 function loadRefreshed(src) {
