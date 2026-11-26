@@ -177,7 +177,7 @@ async function matchPlayableWeapons(names) {
         const row = findWeaponRow(name, index, redirects);
         if (row) matches.set(name, row);
     }
-    return { rows, matches };
+    return { rows, matches, redirects };
 }
 
 module.exports = {

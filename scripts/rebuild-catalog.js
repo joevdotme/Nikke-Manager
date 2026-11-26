@@ -129,13 +129,15 @@ async function updateGame(db, state, sections) {
 async function updateFandom(db, state, sections) {
     const lines = [ATTRIBUTION];
     const names = db.nikkes.map((entry) => entry.name);
-    const { rows, matches } = await matchPlayableWeapons(names);
+    const { rows, matches, redirects } = await matchPlayableWeapons(names);
+    // name_en and redirect targets can change a match without moving title or weapon.
     const hash = crypto
         .createHash("sha256")
         .update(
             rows
                 .filter((row) => row.weapon)
-                .map((row) => `${row.title}\t${row.weapon}`)
+                .map((row) => `${row.title}\t${row.name}\t${row.weapon}`)
+                .concat([...redirects.entries()].map(([from, to]) => `${from}\t${to}`))
                 .sort()
                 .join("\n"),
         )
