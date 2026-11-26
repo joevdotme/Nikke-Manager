@@ -25,7 +25,7 @@ const os = require("os");
 const crypto = require("crypto");
 const path = require("path");
 const { loadDatabaseSource, replaceWeapon, replaceBosses, appendNikkes } = require("./lib/db-file");
-const { ATTRIBUTION, fetchPlayableWeapons } = require("./lib/fandom-weapon");
+const { ATTRIBUTION, matchPlayableWeapons } = require("./lib/fandom-weapon");
 const {
     fetchGameCatalog,
     fetchLauncherVersion,
@@ -128,22 +128,19 @@ async function updateGame(db, state, sections) {
 
 async function updateFandom(db, state, sections) {
     const lines = [ATTRIBUTION];
-    const rows = await fetchPlayableWeapons();
-    const byName = new Map();
-    for (const row of rows) {
-        if (!row.weapon) continue;
-        byName.set(row.name.toLowerCase(), row);
-    }
+    const names = db.nikkes.map((entry) => entry.name);
+    const { rows, matches } = await matchPlayableWeapons(names);
     const hash = crypto
         .createHash("sha256")
         .update(
-            [...byName.values()]
-                .map((row) => `${row.name}\t${row.weapon}`)
+            rows
+                .filter((row) => row.weapon)
+                .map((row) => `${row.title}\t${row.weapon}`)
                 .sort()
                 .join("\n"),
         )
         .digest("hex");
-    if (state.fandom && state.fandom.hash === hash) {
+    if (state.fandom && state.fandom.hash === hash && state.fandom.matcher === 2) {
         lines.push("Wiki weapon list unchanged.");
         sections.push({ source: "fandom", lines });
         return db.src;
@@ -151,7 +148,7 @@ async function updateFandom(db, state, sections) {
     let src = db.src;
     const missing = [];
     for (const entry of db.nikkes) {
-        const row = byName.get(entry.name.toLowerCase());
+        const row = matches.get(entry.name);
         if (!row) {
             missing.push(entry.name);
             continue;
@@ -161,8 +158,8 @@ async function updateFandom(db, state, sections) {
         lines.push(`Changed ${entry.name} weapon to ${row.weapon}.`);
     }
     if (!lines.some((line) => line.startsWith("Changed "))) lines.push("No weapon changes.");
-    if (missing.length) lines.push(`Wiki has no weapon for ${missing.join(", ")}.`);
-    state.fandom = { hash };
+    if (missing.length) lines.push(`No wiki match for ${missing.join(", ")}.`);
+    state.fandom = { hash, matcher: 2 };
     sections.push({ source: "fandom", lines });
     return src;
 }

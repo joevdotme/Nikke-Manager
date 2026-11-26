@@ -14,35 +14,31 @@
 
 const path = require("path");
 const { loadDatabaseSource } = require("./lib/db-file");
-const { ATTRIBUTION, fetchPlayableWeapons } = require("./lib/fandom-weapon");
+const { ATTRIBUTION, matchPlayableWeapons } = require("./lib/fandom-weapon");
 
 async function verify() {
     const dbPath = path.join(__dirname, "..", "knowledge", "nikke-database.js");
     const { nikkes } = loadDatabaseSource(dbPath);
     console.log(ATTRIBUTION);
     console.log(`Found ${nikkes.length} Nikke entries in database`);
-    const rows = await fetchPlayableWeapons();
-    const byName = new Map();
-    for (const row of rows) {
-        if (row.weapon) byName.set(row.name.toLowerCase(), row);
-    }
+    const { rows, matches } = await matchPlayableWeapons(nikkes.map((entry) => entry.name));
     const mismatches = [];
     const missing = [];
     for (const entry of nikkes) {
-        const row = byName.get(entry.name.toLowerCase());
+        const row = matches.get(entry.name);
         if (!row) {
             missing.push(entry.name);
             continue;
         }
         if (row.weapon !== entry.weapon) {
-            mismatches.push({ name: entry.name, dbWeapon: entry.weapon, wikiWeapon: row.weapon });
+            mismatches.push({ name: entry.name, dbWeapon: entry.weapon, wikiWeapon: row.weapon, wiki: row.name });
         }
     }
     console.log(`Wiki playable characters: ${rows.length}`);
     console.log(`Matches: ${nikkes.length - mismatches.length - missing.length}`);
     console.log(`Mismatches: ${mismatches.length}`);
     console.log(`Not on the wiki: ${missing.length}`);
-    mismatches.forEach((m) => console.log(`  ${m.name}: DB="${m.dbWeapon}" Wiki="${m.wikiWeapon}"`));
+    mismatches.forEach((m) => console.log(`  ${m.name}: DB="${m.dbWeapon}" Wiki="${m.wikiWeapon}" (${m.wiki})`));
     if (missing.length) console.log(`  Missing: ${missing.join(", ")}`);
     if (mismatches.length) process.exit(1);
 }
