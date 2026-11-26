@@ -14,7 +14,7 @@
 
 const path = require("path");
 const { loadDatabaseSource } = require("./lib/db-file");
-const { makeSlug, extractWeapon, fetchCharacterPage } = require("./lib/prydwen-weapon");
+const { makeSlug, extractWeapon, fetchCharacterPage, isChallenge } = require("./lib/prydwen-weapon");
 
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -34,6 +34,11 @@ async function verify() {
         process.stdout.write(`[${i + 1}/${nikkes.length}] Checking ${entry.name} (${slug})...`);
         try {
             const page = await fetchCharacterPage(slug);
+            if (isChallenge(page)) {
+                console.log(` HTTP ${page.status}`);
+                console.error("Prydwen fetch failed. Weapon gate cannot pass.");
+                process.exit(1);
+            }
             if (page.status >= 500) {
                 console.log(` HTTP ${page.status}`);
                 fetchErrors++;

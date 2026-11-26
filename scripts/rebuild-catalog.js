@@ -23,7 +23,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { loadDatabaseSource, replaceWeapon, replaceBosses, appendNikkes } = require("./lib/db-file");
-const { makeSlug, extractWeapon, fetchCharacterPage, fetchPrydwen } = require("./lib/prydwen-weapon");
+const { makeSlug, extractWeapon, fetchCharacterPage, fetchPrydwen, isChallenge } = require("./lib/prydwen-weapon");
 const { fetchText } = require("./lib/http");
 const {
     fetchGameCatalog,
@@ -133,6 +133,11 @@ async function updatePrydwen(db, state, sections) {
     const lines = [];
     const indexUrl = process.env.PRYDWEN_INDEX_URL || "https://www.prydwen.gg/nikke/characters";
     const index = await fetchPrydwen(indexUrl);
+    if (isChallenge(index)) {
+        const err = new Error(`Prydwen blocked this machine (HTTP ${index.status}). Weapon updates were skipped.`);
+        err.code = "PRYDWEN_BLOCKED";
+        throw err;
+    }
     if (index.status !== 200 || !index.body) {
         throw new Error(`Prydwen index returned HTTP ${index.status}`);
     }
@@ -151,14 +156,14 @@ async function updatePrydwen(db, state, sections) {
         const entry = nikkes[i];
         const slug = makeSlug(entry.name, entry);
         process.stdout.write(`[${i + 1}/${nikkes.length}] ${entry.name}... `);
-        let page;
-        try {
-            page = await fetchCharacterPage(slug);
-        } catch (err) {
-            if (err.code !== "PRYDWEN_BLOCKED") throw err;
+        const page = await fetchCharacterPage(slug);
+        if (isChallenge(page)) {
             console.log("blocked");
-            lines.push(err.message);
+            lines.push(`Prydwen blocked this machine (HTTP ${page.status}). Weapon updates were skipped.`);
+            failed = true;
             sections.push({ source: "prydwen", lines });
+            const err = new Error(lines[lines.length - 1]);
+            err.code = "PRYDWEN_BLOCKED";
             err.src = src;
             throw err;
         }
