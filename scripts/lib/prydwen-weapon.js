@@ -55,7 +55,7 @@ function isChallenge(res) {
 function fetchPrydwen(url) {
     return new Promise((resolve, reject) => {
         const lib = url.startsWith("http://") ? http : https;
-        lib.get(url, { headers: { "User-Agent": "Mozilla/5.0 NikkeVerifier/1.0" } }, (res) => {
+        const req = lib.get(url, { headers: { "User-Agent": "Mozilla/5.0 NikkeVerifier/1.0" } }, (res) => {
             if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
                 const redirectUrl = res.headers.location.startsWith("http")
                     ? res.headers.location
@@ -64,13 +64,19 @@ function fetchPrydwen(url) {
                 fetchPrydwen(redirectUrl).then(resolve, reject);
                 return;
             }
-            let data = "";
-            res.on("data", (chunk) => {
-                data += chunk;
+            const chunks = [];
+            res.on("data", (chunk) => chunks.push(chunk));
+            res.on("end", () => {
+                resolve({
+                    status: res.statusCode,
+                    body: Buffer.concat(chunks).toString("utf8"),
+                    headers: res.headers,
+                });
             });
-            res.on("end", () => resolve({ status: res.statusCode, body: data, headers: res.headers }));
             res.on("error", reject);
-        }).on("error", reject);
+        });
+        req.setTimeout(30000, () => req.destroy(new Error(`Timeout for ${url}`)));
+        req.on("error", reject);
     });
 }
 
