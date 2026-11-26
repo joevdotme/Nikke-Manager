@@ -10,9 +10,9 @@
  * supposed to run fails. Exit 0 when the run finished, including a no-op.
  *
  * Game identity comes from the public catalog synced off the blablalink CDN.
- * The game job polls the public launcher GetVersion endpoint. Set
- * NIKKE_LAUNCHER_VERSION_URL to override it. A change to launcher_version_info
- * alone does not scrape. build_id or the Game cdn_root does.
+ * The game job polls the public GetVersion endpoint. Set
+ * NIKKE_LAUNCHER_VERSION_URL to override it. build_id or the Game cdn_root
+ * scrapes. launcher_version_info is not read.
  *
  * enikk is solo raid only, and only inside the 8 day window that starts the
  * first time a season id is seen.
@@ -80,38 +80,30 @@ async function updateGame(db, state, sections) {
     const lines = [];
     const catalog = await fetchGameCatalog();
     const launcherUrl = process.env.NIKKE_LAUNCHER_VERSION_URL || LAUNCHER_VERSION_URL;
-    const launcher = await fetchLauncherVersion(launcherUrl);
+    const published = await fetchLauncherVersion(launcherUrl);
     const prev = state.game || {};
     const hashChanged = catalog.catalogHash !== prev.catalogHash;
     const buildChanged = !!(
-        launcher &&
-        (String(launcher.buildId || "") !== String(prev.buildId || "") ||
-            (launcher.cdnRoot || null) !== (prev.cdnRoot || null))
-    );
-    const launcherOnly = !!(
-        launcher &&
-        (launcher.launcherVersion || null) !== (prev.launcherVersion || null) &&
-        !buildChanged &&
-        !hashChanged
+        published &&
+        (String(published.buildId || "") !== String(prev.buildId || "") ||
+            (published.cdnRoot || null) !== (prev.cdnRoot || null))
     );
     const scrape = hashChanged || buildChanged;
-    if (launcherOnly) lines.push(`Launcher-only bump ${launcher.launcherVersion}; game tables not scraped.`);
-    if (gameVersionChanged(prev, launcher)) {
+    if (gameVersionChanged(prev, published)) {
         const date = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
-        pendingVersionEntry = formatNikkeChangelogEntry(launcher, date);
-        const stamp = nikkeVersionStamp(launcher);
-        lines.push(`Game version client ${stamp.client || "unknown"}, server ${stamp.server || "unknown"}.`);
+        pendingVersionEntry = formatNikkeChangelogEntry(published, date);
+        const stamp = nikkeVersionStamp(published);
+        lines.push(`Game ${stamp.client || "unknown"}, server ${stamp.server || "unknown"}.`);
     }
     state.game = {
         catalogHash: catalog.catalogHash,
         syncedAt: catalog.syncedAt,
-        buildId: launcher ? launcher.buildId : prev.buildId || null,
-        versionName: launcher ? launcher.versionName : prev.versionName || null,
-        launcherVersion: launcher ? launcher.launcherVersion : prev.launcherVersion || null,
-        cdnRoot: launcher ? launcher.cdnRoot : prev.cdnRoot || null,
+        buildId: published ? published.buildId : prev.buildId || null,
+        versionName: published ? published.versionName : prev.versionName || null,
+        cdnRoot: published ? published.cdnRoot : prev.cdnRoot || null,
     };
     if (!scrape) {
-        if (!launcherOnly) lines.push("Game build and catalog fingerprint unchanged.");
+        lines.push("Game build and catalog fingerprint unchanged.");
         sections.push({ source: "game", lines });
         return db.src;
     }

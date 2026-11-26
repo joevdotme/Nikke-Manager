@@ -3,9 +3,9 @@ const { fetchJson, fetchText, postText } = require("./http");
 
 // The blablalink character CDN stores JSON under md5 object keys. The public
 // nikke-api sync is the readable form of that same table (names, resource ids,
-// burst, element, weapon, corporation). A launcher version document, when its
-// URL is provided, supplies build_id and the game CDN root. A launcher-only
-// bump is ignored by the caller.
+// burst, element, weapon, corporation). The GetVersion document supplies
+// version_name, build_id, and the game CDN root. launcher_version_info is the
+// PC launcher app. It is empty today, and a filled value is not the game version.
 const CATALOG_URL = "https://nikke-api.pages.dev/api/nikkes";
 const API_ROOT = "https://nikke-api.pages.dev/";
 
@@ -107,7 +107,6 @@ async function fetchLauncherVersion(url) {
         throw new Error(`Launcher version error ${data.result.error_code}: ${data.result.error_message || "unknown"}`);
     }
     const info = data.version_info || {};
-    const launcher = data.launcher_version_info || {};
     let cdnRoot = null;
     if (info.cos_repo_files) {
         const repos = typeof info.cos_repo_files === "string" ? JSON.parse(info.cos_repo_files) : info.cos_repo_files;
@@ -117,16 +116,15 @@ async function fetchLauncherVersion(url) {
     return {
         buildId: info.build_id ? String(info.build_id) : null,
         versionName: info.version_name || null,
-        launcherVersion: launcher.version_name || null,
         cdnRoot,
     };
 }
 
 // The version document has no separate server version string. build_id is the
-// build the service is publishing. launcher_version_info is often empty.
+// build the service is publishing.
 function nikkeVersionStamp(info) {
     if (!info) {
-        return { client: "", clientFull: "", server: "", launcher: "", cdn: "" };
+        return { client: "", clientFull: "", server: "", cdn: "" };
     }
     const name = info.versionName || "";
     const match = String(name).match(/(\d+\.\d+\.\d+)\s*$/);
@@ -134,7 +132,6 @@ function nikkeVersionStamp(info) {
         client: match ? match[1] : name,
         clientFull: name,
         server: info.buildId || "",
-        launcher: info.launcherVersion || "",
         cdn: info.cdnRoot || "",
     };
 }

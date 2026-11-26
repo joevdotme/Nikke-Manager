@@ -2,7 +2,7 @@ name: catalog-game
 
 on:
   schedule:
-    # About every 6 hours. A launcher-only bump does not scrape.
+    # About every 6 hours. Scrapes when the game build or catalog fingerprint changes.
     - cron: "20 */6 * * *"
   workflow_dispatch:
 

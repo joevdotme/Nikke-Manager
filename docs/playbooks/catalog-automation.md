@@ -67,13 +67,13 @@ The check name is the job name `catalog-validate` in `.github/workflows/catalog-
 
 ## Launcher version
 
-You do not need `NIKKE_LAUNCHER_VERSION_URL`. The game job already posts to `https://www.jupiterlauncher.com/api/v1/fleet.repo.game.RepoSVC/GetVersion`. A change to `version_info.build_id` or the Game CDN root scrapes. A launcher-only bump does not. Set the variable only to point the job at a different version document.
+You do not need `NIKKE_LAUNCHER_VERSION_URL`. The game job already posts to `https://www.jupiterlauncher.com/api/v1/fleet.repo.game.RepoSVC/GetVersion`. A change to `version_info.build_id` or the Game CDN root scrapes. Set the variable only to point the job at a different version document. `launcher_version_info` on that document is the PC launcher app. The job does not read it.
 
 ## Version changelog
 
 `docs/nikke-changelog.md` gains an entry only when the published game version (`version_info.version_name`) or server build (`version_info.build_id`) changes. The data pull request commits that file. A Pages deploy does not add a changelog commit.
 
-The site footer is stamped into the deploy artifact, not into git. It is three lines: manager version, build sha, and date; the game version (`version_info.version_name`); and the server build (`version_info.build_id`). The public version document has no separate server version string, so the server line is `build_id`. A failed version lookup leaves the game and server lines off and still publishes. `launcher_version_info` is the PC launcher's own build. The footer does not show it. The game job still reads it so a launcher-only bump does not scrape.
+The site footer is stamped into the deploy artifact, not into git. It is three lines: manager version, build sha, and date; the game version (`version_info.version_name`); and the server build (`version_info.build_id`). The public version document has no separate server version string, so the server line is `build_id`. A failed version lookup leaves the game and server lines off and still publishes.
 
 ## First run
 

@@ -39,7 +39,6 @@ jobs:
       - name: Rebuild catalog
         env:
           # Optional override. Empty uses the public GetVersion endpoint in scripts/lib/game-catalog.js.
-          # A launcher-only bump does not scrape.
           NIKKE_LAUNCHER_VERSION_URL: ${{ vars.NIKKE_LAUNCHER_VERSION_URL }}
         run: node scripts/rebuild-catalog.js --source "${{ inputs.source }}" --write --changelog "$RUNNER_TEMP/changelog.md"
       - name: Open data pull request
