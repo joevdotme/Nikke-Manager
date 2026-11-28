@@ -1651,6 +1651,10 @@ details[open] > .verdict-title {
 }
 
 /* ── Auth & Sync ── */
+/* .btn-sm sets display:inline-flex, which overrides the hidden attribute. */
+#auth-btn[hidden] {
+    display: none !important;
+}
 .btn-auth {
     border-color: #166534;
     color: #4ade80;

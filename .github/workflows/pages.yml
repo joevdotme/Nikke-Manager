@@ -35,6 +35,8 @@ jobs:
         run: node scripts/bump-version.js --write --push
       - name: Stamp the deploy artifact
         run: node scripts/stamp-deploy.js dist
+      - name: Set the Sign In flag for this Pages host
+        run: node scripts/write-features.js dist/js/features.js
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
