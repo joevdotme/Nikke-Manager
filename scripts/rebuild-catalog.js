@@ -35,6 +35,7 @@ const {
     formatNikkeChangelogEntry,
 } = require("./lib/game-catalog");
 const { fetchSoloRaids, seasonWindow } = require("./lib/enikk");
+const { ensurePortraits } = require("./lib/portraits");
 
 const root = path.join(__dirname, "..");
 const dbPath = path.join(root, "knowledge", "nikke-database.js");
@@ -99,31 +100,33 @@ async function updateGame(db, state, sections) {
         versionName: published ? published.versionName : prev.versionName || null,
         cdnRoot: published ? published.cdnRoot : prev.cdnRoot || null,
     };
+    let src = db.src;
     if (!scrape) {
         lines.push("Client build and catalog fingerprint unchanged.");
-        sections.push({ source: "game", lines });
-        return db.src;
-    }
-
-    const known = new Set(db.nikkes.map((n) => n.name.toLowerCase()));
-    const usedIds = new Set(db.nikkes.map((n) => n.id));
-    let nextId = db.nikkes.reduce((max, n) => Math.max(max, n.id || 0), 0);
-    const additions = [];
-    for (const character of catalog.characters) {
-        if (known.has(character.name.toLowerCase())) continue;
-        let id = character.resourceId;
-        if (usedIds.has(id)) {
-            nextId += 1;
-            id = nextId;
+    } else {
+        const known = new Set(db.nikkes.map((n) => n.name.toLowerCase()));
+        const usedIds = new Set(db.nikkes.map((n) => n.id));
+        let nextId = db.nikkes.reduce((max, n) => Math.max(max, n.id || 0), 0);
+        const additions = [];
+        for (const character of catalog.characters) {
+            if (known.has(character.name.toLowerCase())) continue;
+            let id = character.resourceId;
+            if (usedIds.has(id)) {
+                nextId += 1;
+                id = nextId;
+            }
+            usedIds.add(id);
+            known.add(character.name.toLowerCase());
+            additions.push(Object.assign({}, character, { id }));
+            lines.push(`Added ${character.name} (resource id ${character.resourceId}).`);
         }
-        usedIds.add(id);
-        known.add(character.name.toLowerCase());
-        additions.push(Object.assign({}, character, { id }));
-        lines.push(`Added ${character.name} (resource id ${character.resourceId}).`);
+        if (!additions.length) lines.push("Catalog revision changed; no new Nikke names.");
+        src = appendNikkes(db.src, additions);
     }
-    if (!additions.length) lines.push("Catalog revision changed; no new Nikke names.");
+    const portraits = await ensurePortraits(catalog.characters, db.nikkes, path.join(root, "assets", "nikkes"));
+    if (portraits.length) lines.push(`Added portraits for ${portraits.join(", ")}.`);
     sections.push({ source: "game", lines });
-    return appendNikkes(db.src, additions);
+    return src;
 }
 
 async function updateFandom(db, state, sections) {

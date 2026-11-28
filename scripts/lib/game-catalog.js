@@ -58,6 +58,7 @@ function normalizeCharacter(raw) {
         rarity,
         manufacturer,
         class: klass,
+        icon: (raw.images && raw.images.icon) || "",
     };
 }
 

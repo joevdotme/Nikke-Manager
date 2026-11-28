@@ -1,5 +1,11 @@
 {
-  "game": {},
+  "game": {
+    "catalogHash": "3472fbe1f29c282628d4c00d2bdd4eb449c81e9b8f3b0cb0d6405325bfc2744c",
+    "syncedAt": "2026-11-24T04:39:22.814Z",
+    "buildId": "3203",
+    "versionName": "NIKKE.PC_Offcial_GL_153.6.10",
+    "cdnRoot": "https://cloud.nikke-kr.com/PC/prod/rid.48-r.02587"
+  },
   "prydwen": {},
   "enikk": {}
 }
