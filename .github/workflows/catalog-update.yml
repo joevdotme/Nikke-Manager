@@ -1,0 +1,47 @@
+name: catalog-update
+
+on:
+  workflow_call:
+    inputs:
+      source:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      source:
+        description: Which source to scrape
+        required: true
+        type: choice
+        options:
+          - game
+          - fandom
+          - enikk
+
+permissions:
+  contents: read
+
+# One catalog write at a time. A second run waits. A third cancels the one still waiting.
+concurrency:
+  group: catalog-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.repository == 'joevdotme/Nikke-Manager'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - name: Rebuild catalog
+        env:
+          # Optional override. Empty uses the public GetVersion endpoint in scripts/lib/game-catalog.js.
+          NIKKE_LAUNCHER_VERSION_URL: ${{ vars.NIKKE_LAUNCHER_VERSION_URL }}
+        run: node scripts/rebuild-catalog.js --source "${{ inputs.source }}" --write --changelog "$RUNNER_TEMP/changelog.md"
+      - name: Open data pull request
+        env:
+          CATALOG_GITHUB_TOKEN: ${{ secrets.CATALOG_GITHUB_TOKEN }}
+        run: bash scripts/open-data-pr.sh "${{ inputs.source }}" "$RUNNER_TEMP/changelog.md"

@@ -268,15 +268,23 @@ preloadNikkeIcons();
     if (!el) return;
     const b = window.BUILD_INFO || {};
     const version = b.version ? "v" + b.version : "v?";
-    const parts = [version];
-    if (b.commit) parts.push("build " + b.commit);
-    if (b.date) parts.push(b.date);
-    el.textContent = parts.join(" · ");
-    el.title =
-        "Version " +
-        (b.version || "?") +
-        (b.commit ? "\nCommit: " + b.commit : "") +
-        (b.date ? "\nBuild date: " + b.date : "");
+    const manager = ["Manager " + version];
+    if (b.commit) manager.push("build (" + b.commit + ")");
+    if (b.date) manager.push(b.date);
+    const lines = [manager.join(" · ")];
+    if (b.nikkeClient) lines.push("Client " + b.nikkeClient);
+    if (b.nikkeServer) lines.push("Server " + b.nikkeServer);
+    el.textContent = lines.join("\n");
+    el.title = [
+        "Manager " + (b.version || "?"),
+        b.commit ? "Build: " + b.commit : "",
+        b.date ? "Date: " + b.date : "",
+        b.nikkeClientFull || b.nikkeClient ? "Client: " + (b.nikkeClientFull || b.nikkeClient) : "",
+        b.nikkeServer ? "Server: " + b.nikkeServer : "",
+        b.nikkeCdn ? "Game CDN: " + b.nikkeCdn : "",
+    ]
+        .filter(Boolean)
+        .join("\n");
 })();
 
 // ── Tutorial & New User Redirect ────────────────────────────

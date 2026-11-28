@@ -1,0 +1,21 @@
+name: catalog-enikk
+
+on:
+  schedule:
+    - cron: "40 */12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalog-data
+  cancel-in-progress: false
+
+jobs:
+  enikk:
+    if: github.repository == 'joevdotme/Nikke-Manager'
+    uses: ./.github/workflows/catalog-update.yml
+    secrets: inherit
+    with:
+      source: enikk

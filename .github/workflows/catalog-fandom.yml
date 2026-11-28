@@ -1,0 +1,21 @@
+name: catalog-fandom
+
+on:
+  schedule:
+    - cron: "30 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalog-data
+  cancel-in-progress: false
+
+jobs:
+  fandom:
+    if: github.repository == 'joevdotme/Nikke-Manager'
+    uses: ./.github/workflows/catalog-update.yml
+    secrets: inherit
+    with:
+      source: fandom

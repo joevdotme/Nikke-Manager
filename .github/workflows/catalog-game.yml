@@ -1,0 +1,22 @@
+name: catalog-game
+
+on:
+  schedule:
+    # About every 6 hours. Scrapes when the game build or catalog fingerprint changes.
+    - cron: "20 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalog-data
+  cancel-in-progress: false
+
+jobs:
+  game:
+    if: github.repository == 'joevdotme/Nikke-Manager'
+    uses: ./.github/workflows/catalog-update.yml
+    secrets: inherit
+    with:
+      source: game
