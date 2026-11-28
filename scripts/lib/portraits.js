@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
+const { canonicalNikkeName } = require("./name-overrides");
 
 // Same slug knowledge/nikke-database.js builds when an entry has no slug field.
 function portraitSlug(name) {
@@ -46,30 +47,33 @@ function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Saves images.icon for catalog names whose sidebar file is missing.
-// An existing file is left alone, including portraits already committed under a custom slug.
+// Saves images.icon for roster names whose sidebar file is missing.
+// Short game names resolve first, so a collab does not get a second file
+// beside the portrait already committed for that Nikke. An existing file is
+// left alone, including portraits already committed under a custom slug.
 async function ensurePortraits(characters, nikkes, dir) {
     const byName = new Map(nikkes.map((n) => [n.name.toLowerCase(), n]));
     const added = [];
     fs.mkdirSync(dir, { recursive: true });
     for (const character of characters) {
         if (!character.icon) continue;
-        const entry = byName.get(character.name.toLowerCase());
-        const slug = (entry && entry.slug) || portraitSlug(character.name);
+        const name = canonicalNikkeName(character.name);
+        const entry = byName.get(String(name).toLowerCase());
+        const slug = (entry && entry.slug) || portraitSlug(name);
         const dest = path.join(dir, `${slug}.webp`);
         if (fs.existsSync(dest)) continue;
         try {
             const res = await fetchBinary(character.icon);
             const webp = res.body && res.body.length > 12 && res.body.toString("ascii", 0, 4) === "RIFF" && res.body.toString("ascii", 8, 12) === "WEBP";
             if (res.status !== 200 || !webp) {
-                console.error(`Portrait for ${character.name} was not a webp (HTTP ${res.status}).`);
+                console.error(`Portrait for ${name} was not a webp (HTTP ${res.status}).`);
                 continue;
             }
             fs.writeFileSync(dest, res.body);
-            added.push(character.name);
+            added.push(name);
             console.log(`Portrait ${slug}.webp`);
         } catch (err) {
-            console.error(`Portrait for ${character.name} failed: ${err.message}`);
+            console.error(`Portrait for ${name} failed: ${err.message}`);
         }
         await sleep(100);
     }

@@ -36,6 +36,8 @@ const SLOT_MAP = {
     "Combat Boots": "Legs",
 };
 
+// scripts/lib/name-overrides.js reads this object. Keep the const name and the
+// object literal so a catalog rebuild resolves the same short game names.
 const NAME_OVERRIDES = {
     Asuka: "Asuka Shikinami Langley",
     "Asuka: WILLE": "Asuka Shikinami Langley: Wille",

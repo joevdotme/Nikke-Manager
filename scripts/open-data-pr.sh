@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Open a chore(data) pull request for a catalog run that changed knowledge files.
+# Open a chore(data) pull request for a catalog run that changed knowledge files
+# or downloaded portraits under assets/nikkes.
 # Does not open a pull request when CATALOG_GITHUB_TOKEN is missing.
 # Enables squash auto-merge. A failing catalog-validate check leaves the PR open.
 set -euo pipefail
@@ -16,12 +17,12 @@ if [ -z "$source_name" ] || [ -z "$changelog" ] || [ ! -f "$changelog" ]; then
     exit 1
 fi
 
-paths=(knowledge/nikke-database.js knowledge/source-versions.json)
+paths=(knowledge/nikke-database.js knowledge/source-versions.json assets/nikkes)
 if [ -f docs/nikke-changelog.md ]; then
     paths+=(docs/nikke-changelog.md)
 fi
 if [ -z "$(git status --porcelain -- "${paths[@]}")" ]; then
-    echo "No knowledge files changed. Not opening a pull request."
+    echo "No knowledge files or portraits changed. Not opening a pull request."
     exit 0
 fi
 

@@ -36,6 +36,7 @@ const {
 } = require("./lib/game-catalog");
 const { fetchSoloRaids, seasonWindow } = require("./lib/enikk");
 const { ensurePortraits } = require("./lib/portraits");
+const { canonicalNikkeName } = require("./lib/name-overrides");
 
 const root = path.join(__dirname, "..");
 const dbPath = path.join(root, "knowledge", "nikke-database.js");
@@ -109,16 +110,19 @@ async function updateGame(db, state, sections) {
         let nextId = db.nikkes.reduce((max, n) => Math.max(max, n.id || 0), 0);
         const additions = [];
         for (const character of catalog.characters) {
-            if (known.has(character.name.toLowerCase())) continue;
+            // Collab rows use the short name the game shows ("Ada", "Little Mermaid").
+            // The roster already stores the name gear import resolves to.
+            const name = canonicalNikkeName(character.name);
+            if (known.has(name.toLowerCase())) continue;
             let id = character.resourceId;
             if (usedIds.has(id)) {
                 nextId += 1;
                 id = nextId;
             }
             usedIds.add(id);
-            known.add(character.name.toLowerCase());
-            additions.push(Object.assign({}, character, { id }));
-            lines.push(`Added ${character.name} (resource id ${character.resourceId}).`);
+            known.add(name.toLowerCase());
+            additions.push(Object.assign({}, character, { id, name }));
+            lines.push(`Added ${name} (resource id ${character.resourceId}).`);
         }
         if (!additions.length) lines.push("Catalog revision changed; no new Nikke names.");
         src = appendNikkes(db.src, additions);
